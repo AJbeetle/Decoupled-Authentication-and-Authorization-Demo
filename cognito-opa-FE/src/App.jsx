@@ -33,7 +33,7 @@ function App() {
   const requestAccess = async (endpoint) => {
     try {
       const res = await axios.get(
-        `https://5x207ye1rl.execute-api.us-east-1.amazonaws.com/${endpoint}`,
+        `http://k8s-default-backendi-4658eba6d2-1797527259.us-east-1.elb.amazonaws.com/${endpoint}`,
         {
           headers: {
             Authorization: `Bearer ${auth.user?.access_token}`,
@@ -43,7 +43,7 @@ function App() {
 
       if (res.status === 200) {
         setResponse(`✅ ${endpoint} access granted`);
-        setImage(res.data.image);
+        setImage(res.data.imageUrl);
       }
     } catch (err) {
       if (err.response) {
