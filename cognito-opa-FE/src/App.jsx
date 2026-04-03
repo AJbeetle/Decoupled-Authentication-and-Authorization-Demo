@@ -2,6 +2,7 @@ import { useAuth } from "react-oidc-context";
 import axios from "axios";
 import { useState } from "react";
 import "./App.css";
+import UserManagement from "./userManagement";
 
 function App() {
   const auth = useAuth();
@@ -11,7 +12,7 @@ function App() {
 
   const globalLogout = () => {
     const clientId = "4m74b1gro60gobfgnkj5ehdvj0";
-    const logoutUri = "http://localhost:3000";
+    const logoutUri = "https://eks-fe.learnc.online";
     const cognitoDomain =
       "https://us-east-1js2bzx6lt.auth.us-east-1.amazoncognito.com";
 
@@ -33,7 +34,7 @@ function App() {
   const requestAccess = async (endpoint) => {
     try {
       const res = await axios.get(
-        `http://k8s-default-backendi-4658eba6d2-1797527259.us-east-1.elb.amazonaws.com/${endpoint}`,
+        `https://5x207ye1rl.execute-api.us-east-1.amazonaws.com/${endpoint}`,
         {
           headers: {
             Authorization: `Bearer ${auth.user?.access_token}`,
@@ -106,6 +107,11 @@ function App() {
             <h4>Refresh Token</h4>
             <textarea readOnly value={auth.user?.refresh_token} />
           </details>
+        </div>
+
+        <div>
+          <h1>USER MANAGEMENT : Conditional Rendering</h1>
+          <UserManagement/>
         </div>
       </div>
     );
