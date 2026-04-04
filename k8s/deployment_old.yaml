@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+
+      # 🔹 Backend container
+      - name: backend
+        image: your-docker-repo/backend:latest
+        ports:
+          - containerPort: 3000
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+
+      # 🔹 OPA Sidecar
+      - name: opa
+        image: openpolicyagent/opa:0.63.0
+        ports:
+          - containerPort: 8181
+        args:
+          - "run"
+          - "--server"
+          - "--addr=0.0.0.0:8181"
+          - "/policies"
+        volumeMounts:
+          - name: opa-policy
+            mountPath: /policies
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8181
+          initialDelaySeconds: 2
+          periodSeconds: 5
+
+      volumes:
+        - name: opa-policy
+          configMap:
+            name: opa-policy

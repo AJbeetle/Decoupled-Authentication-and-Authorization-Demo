@@ -1,0 +1,13 @@
+extraFilters:
+  # Ensure Kubernetes metadata is present (safety)
+  - Name: kubernetes
+    Match: kube.*
+
+  # Filter only OPA container logs
+  - Name: grep
+    Match: kube.*
+    Regex: kubernetes.container_name opa
+
+  - Name: grep
+    Match: kube.*
+    Regex: log decision_id

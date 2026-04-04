@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: public.ecr.aws/u2y3f7w2/eksfrontendrepo:2.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80

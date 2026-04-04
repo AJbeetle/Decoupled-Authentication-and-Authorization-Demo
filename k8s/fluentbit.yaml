@@ -1,0 +1,54 @@
+# fluent bit config displayed in cleaner format
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-for-fluent-bit
+  namespace: amazon-cloudwatch
+
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        HTTP_Server  On
+        HTTP_Listen  0.0.0.0
+        HTTP_PORT    2020
+        Health_Check On 
+        HC_Errors_Count 5 
+        HC_Retry_Failure_Count 5 
+        HC_Period 5 
+
+        Parsers_File /fluent-bit/parsers/parsers.conf
+
+    [INPUT]
+        Name              tail
+        Tag               kube.*
+        Path              /var/log/containers/*.log
+        DB                /var/log/flb_kube.db
+        multiline.parser  docker, cri
+        Mem_Buf_Limit     5MB
+        Skip_Long_Lines   On
+        Refresh_Interval  10
+
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Kube_URL            https://kubernetes.default.svc.cluster.local:443
+        Merge_Log           On
+        Merge_Log_Key       data
+        Keep_Log            On
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude On
+        Buffer_Size         32k
+
+    # 🔥 ONLY OPA LOGS
+    [FILTER]
+        Name   grep
+        Match  kube.*
+        Regex  kubernetes.container_name  opa
+
+    [OUTPUT]
+        Name                  cloudwatch_logs
+        Match                 *
+        region                us-east-1
+        log_group_name        /aws/eks/fluentbit-cloudwatch/logs
+        log_stream_prefix     fluentbit-
+        auto_create_group     true

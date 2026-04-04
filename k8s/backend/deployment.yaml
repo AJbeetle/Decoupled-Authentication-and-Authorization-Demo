@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      serviceAccountName: backend-service-account   # ← this line
+      containers:
+
+      # 🔹 Backend
+      - name: backend
+        image: public.ecr.aws/u2y3f7w2/eksbackendrepo:2.0
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /  # Ensure your app has a / endpoint for healthCheck
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+
+      # 🔹 OPA Sidecar
+      - name: opa
+        image: openpolicyagent/opa:latest
+        ports:
+          - containerPort: 8181
+        args:
+          - "run"
+          - "--server"
+          - "--addr=0.0.0.0:8181"
+          - "--config-file=/config/opa-config.yaml"
+          - "--log-level=error"
+          -  "--ignore=.*"
+          - "/policies"
+        volumeMounts:
+          - name: opa-policy
+            mountPath: /policies
+          - name: opa-config
+            mountPath: /config
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8181
+          initialDelaySeconds: 2
+          periodSeconds: 5
+
+      volumes:
+        - name: opa-policy
+          configMap:
+            name: opa-policy
+        - name: opa-config
+          configMap:
+            name: opa-config
